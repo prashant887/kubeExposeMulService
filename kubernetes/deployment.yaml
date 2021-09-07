@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expose-mul-con
+  namespace: demo-namespace
+spec:
+  selector:
+    matchLabels:
+      app: expose-mul-con
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: expose-mul-con
+    spec:
+      volumes:
+        - name: log-path
+          hostPath:
+            path: /Users/pl465j/projects/kubeExposeMulService/log
+      containers:
+      - name: serviceone
+        image: serviceone:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5001
+          name: portone
+        volumeMounts:
+          - name: log-path
+            mountPath: /log/
+      - name: servicetwo
+        image: servicetwo:latest
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 5002
+            name: porttwo
+        volumeMounts:
+          - name: log-path
+            mountPath: /log/
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: expose-mul-con
+  namespace: demo-namespace
+spec:
+  selector:
+    app: expose-mul-con
+  ports:
+    - port: 5051
+      protocol: TCP
+      targetPort: 5001
+      name: portone
+      #nodePort: 31515
+    - port: 5052
+      protocol: TCP
+      targetPort: 5002
+      name: porttwo
+  type: LoadBalancer
+        #NodePort
+        #LoadBalancer
